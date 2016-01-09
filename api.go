@@ -160,8 +160,15 @@ func newClient() (client *http.Client) {
 	return
 }
 
-func createFile(name string, data []byte) (err error) {
-	file, err := os.OpenFile(name, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
+func createFile(name string, data []byte, isAppend bool) (err error) {
+	oflag := os.O_CREATE | os.O_WRONLY
+	if isAppend {
+		oflag |= os.O_APPEND
+	} else {
+		oflag |= os.O_TRUNC
+	}
+
+	file, err := os.OpenFile(name, oflag, 0600)
 	if err != nil {
 		return
 	}
@@ -214,7 +221,7 @@ func send(apiUri, name string, body io.Reader, call Caller) (err error) {
 			return
 		}
 
-		if err = createFile(filepath.Join(CurrentDir, name+".json"), data); err != nil {
+		if err = createFile(filepath.Join(CurrentDir, name+".json"), data, strings.HasSuffix(name, "member")); err != nil {
 			return
 		}
 		reader = bytes.NewReader(data)

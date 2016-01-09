@@ -82,7 +82,7 @@ func showQRImage(uuid string) (cmd *exec.Cmd, err error) {
 		return
 	}
 
-	if err = createFile(QRImagePath, data); err != nil {
+	if err = createFile(QRImagePath, data, false); err != nil {
 		return
 	}
 
