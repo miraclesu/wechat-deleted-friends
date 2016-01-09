@@ -103,11 +103,6 @@ func search(baseUri string, bReq *BaseRequest, list []*Member) (err error) {
 
 	chatRoomName, names, users := "", make([]string, 0, *GroupNum), make([]User, 0, *GroupNum)
 	for i, member := range list {
-		if i > 0 {
-			log.Printf("程序等待 %ds 后将继续查找,请耐心等待...\n", *Duration)
-			time.Sleep(time.Duration(*Duration) * time.Second)
-		}
-
 		if len(chatRoomName) == 0 {
 			users = append(users, User{
 				UserName: member.UserName,
@@ -119,7 +114,14 @@ func search(baseUri string, bReq *BaseRequest, list []*Member) (err error) {
 			continue
 		}
 
+		if i / *GroupNum > 0 {
+			log.Printf("程序等待 %ds 后将继续查找,请耐心等待...\n", *Duration)
+			time.Sleep(time.Duration(*Duration) * time.Second)
+		}
+
 		if len(chatRoomName) > 0 {
+			// 稍微等待一下
+			time.Sleep(1 * time.Second)
 			err = try("增加群成员", func() error {
 				//err = addMember(baseUri, bReq, chatRoomName, names)
 				return err
@@ -136,6 +138,7 @@ func search(baseUri string, bReq *BaseRequest, list []*Member) (err error) {
 			return
 		}
 
+		time.Sleep(1 * time.Second)
 		if err = try("删除群成员", func() error {
 			//			return deleteMember(baseUri, bReq, chatRoomName, names)
 			return nil
@@ -145,11 +148,11 @@ func search(baseUri string, bReq *BaseRequest, list []*Member) (err error) {
 
 		names = names[:0]
 		progress(i+1, total)
-		log.Printf("已完成[%d]位好友的查找，目前找到的\"好友\"人数为[%d]\n", i+1, len(OnceFriends))
 		// TODO
 		// break
 	}
 
+	progress(total, total)
 	return
 }
 
@@ -177,6 +180,7 @@ func try(name string, f func() error) (err error) {
 
 func progress(current, total int) {
 	done := current * *Progress / total
+	log.Printf("已完成[%d]位好友的查找，目前找到的\"好友\"人数为[%d]\n", current, len(OnceFriends))
 	log.Println("[" + strings.Repeat("#", done) + strings.Repeat("-", *Progress-done) + "]")
 }
 

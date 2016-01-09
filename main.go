@@ -20,9 +20,7 @@ var (
 
 func main() {
 	flag.Parse()
-
 	log.Println("本程序的查询结果可能会引起一些心理上的不适，请做好心理准备...")
-	log.Println("开始")
 
 	uuid, err := getUUID()
 	if err != nil {
