@@ -161,7 +161,7 @@ func newClient() (client *http.Client) {
 }
 
 func createFile(name string, data []byte) (err error) {
-	file, err := os.OpenFile(name, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
+	file, err := os.OpenFile(name, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
 		return
 	}
