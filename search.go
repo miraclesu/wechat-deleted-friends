@@ -26,7 +26,7 @@ func webwxGetContact(baseUri string, bReq *BaseRequest) (list []*Member, count i
 	return
 }
 
-func createChatRoom(baseUri string, bReq *BaseRequest, users []User) (chatRoomName string, err error) {
+func createChatRoom(baseUri string, bReq *BaseRequest, users []User, namesMap map[string]*Member) (chatRoomName string, err error) {
 	br := Request{
 		BaseRequest: bReq,
 		MemberCount: len(users),
@@ -45,14 +45,18 @@ func createChatRoom(baseUri string, bReq *BaseRequest, users []User) (chatRoomNa
 	}
 
 	chatRoomName = resp.ChatRoomName
-	onceFriend(resp.MemberList)
+	onceFriend(resp.MemberList, namesMap)
 	return
 }
 
-func onceFriend(members []*Member) {
+func onceFriend(members []*Member, namesMap map[string]*Member) {
 	for _, member := range members {
 		if member.IsOnceFriend() {
-			OnceFriends = append(OnceFriends, fmt.Sprintf("昵称:[%s], 备注:[%s]", member.NickName, member.RemarkName))
+			m, ok := namesMap[member.UserName]
+			if !ok {
+				m = member
+			}
+			OnceFriends = append(OnceFriends, fmt.Sprintf("昵称:[%s], 备注:[%s]", m.NickName, m.RemarkName))
 		}
 	}
 }
@@ -74,7 +78,7 @@ func deleteMember(baseUri string, bReq *BaseRequest, chatRoomName string, users 
 	return
 }
 
-func addMember(baseUri string, bReq *BaseRequest, chatRoomName string, users []string) (err error) {
+func addMember(baseUri string, bReq *BaseRequest, chatRoomName string, users []string, namesMap map[string]*Member) (err error) {
 	br := Request{
 		BaseRequest:   bReq,
 		ChatRoomName:  chatRoomName,
@@ -91,7 +95,7 @@ func addMember(baseUri string, bReq *BaseRequest, chatRoomName string, users []s
 		return
 	}
 
-	onceFriend(resp.MemberList)
+	onceFriend(resp.MemberList, namesMap)
 	return
 }
 
@@ -101,35 +105,32 @@ func search(baseUri string, bReq *BaseRequest, list []*Member) (err error) {
 		return
 	}
 
-	chatRoomName, names, users := "", make([]string, 0, *GroupNum), make([]User, 0, *GroupNum)
+	chatRoomName, names, users, namesMap := "", make([]string, 0, *GroupNum), make([]User, 0, *GroupNum), make(map[string]*Member, *GroupNum)
 	for i, member := range list {
 		if len(chatRoomName) == 0 {
 			users = append(users, User{
 				UserName: member.UserName,
 			})
 		}
-		names = append(names, member.UserName)
+		names, namesMap[member.UserName] = append(names, member.UserName), member
 
 		if len(names) < *GroupNum {
 			continue
 		}
 
 		if i / *GroupNum > 0 {
-			log.Printf("程序等待 %ds 后将继续查找,请耐心等待...\n", *Duration)
+			log.Printf("程序等待 %ds 后将继续查找，请耐心等待...\n", *Duration)
 			time.Sleep(time.Duration(*Duration) * time.Second)
 		}
 
 		if len(chatRoomName) > 0 {
-			// 稍微等待一下
-			time.Sleep(1 * time.Second)
 			err = try("增加群成员", func() error {
-				//err = addMember(baseUri, bReq, chatRoomName, names)
+				err = addMember(baseUri, bReq, chatRoomName, names, namesMap)
 				return err
 			})
 		} else {
 			err = try("创建群", func() error {
-				//		chatRoomName, err = createChatRoom(baseUri, bReq, users)
-				return nil
+				chatRoomName, err = createChatRoom(baseUri, bReq, users, namesMap)
 				return err
 			})
 		}
@@ -138,18 +139,15 @@ func search(baseUri string, bReq *BaseRequest, list []*Member) (err error) {
 			return
 		}
 
-		time.Sleep(1 * time.Second)
 		if err = try("删除群成员", func() error {
-			//			return deleteMember(baseUri, bReq, chatRoomName, names)
+			return deleteMember(baseUri, bReq, chatRoomName, names)
 			return nil
 		}); err != nil {
 			return
 		}
 
-		names = names[:0]
+		names, namesMap = names[:0], make(map[string]*Member, *GroupNum)
 		progress(i+1, total)
-		// TODO
-		// break
 	}
 
 	progress(total, total)

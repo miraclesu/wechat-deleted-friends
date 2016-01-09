@@ -55,6 +55,7 @@ func main() {
 		log.Printf("登录失败: %s\n", err.Error())
 		return
 	}
+	log.Println("登录成功")
 
 	index := strings.LastIndex(redirectUri, "/")
 	if index == -1 {
@@ -66,6 +67,7 @@ func main() {
 		log.Printf("初始化失败: %s\n", err.Error())
 		return
 	}
+	log.Println("初始化成功")
 
 	memberList, count, err := webwxGetContact(baseUri, bReq)
 	if err != nil {
