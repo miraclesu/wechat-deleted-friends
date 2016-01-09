@@ -4,7 +4,9 @@ import (
 	"flag"
 	"log"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 )
 
 var (
@@ -80,5 +82,12 @@ func main() {
 	show()
 	// TODO 删除创建的群
 	// TODO 关闭打开的二维码
-	log.Println("感谢你使用本程序！")
+	log.Println("感谢你使用本程序！ 按 Ctrl+C 退出程序")
+	WaitForExit()
+}
+
+func WaitForExit() os.Signal {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGTERM)
+	return <-c
 }
