@@ -28,16 +28,12 @@ func main() {
 		return
 	}
 
-	cmd, err := showQRImage(uuid)
-	if err != nil {
+	if err = showQRImage(uuid); err != nil {
 		log.Printf("创建二维码失败: %s\n", err.Error())
 		return
 	}
 	log.Println("请使用微信扫描二维码以登录")
 	defer func() {
-		if cmd.Process != nil {
-			cmd.Process.Kill()
-		}
 		os.Remove(QRImagePath)
 	}()
 

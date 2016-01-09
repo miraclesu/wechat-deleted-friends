@@ -10,11 +10,11 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"os/exec"
-	"runtime"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/skratchdot/open-golang/open"
 )
 
 func getUUID() (uuid string, err error) {
@@ -58,7 +58,7 @@ func getUUID() (uuid string, err error) {
 	return
 }
 
-func showQRImage(uuid string) (cmd *exec.Cmd, err error) {
+func showQRImage(uuid string) (err error) {
 	qrUrl := `https://login.weixin.qq.com/qrcode/` + uuid
 	params := url.Values{}
 	params.Set("t", "webwx")
@@ -86,19 +86,7 @@ func showQRImage(uuid string) (cmd *exec.Cmd, err error) {
 		return
 	}
 
-	command := "open"
-	switch runtime.GOOS {
-	case "linux":
-		command = "xdg-open"
-	case "windows", "darwin":
-	default:
-		err = fmt.Errorf("暂不支持此操作系统[%s]", runtime.GOOS)
-		return
-	}
-
-	cmd = exec.Command(command, QRImagePath)
-	err = cmd.Start()
-	return
+	return open.Start(QRImagePath)
 }
 
 func waitForLogin(uuid string, tip int) (redirectUri, code string, rt int, err error) {
