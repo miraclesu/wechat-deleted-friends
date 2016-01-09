@@ -175,7 +175,9 @@ func webwxInit(baseUri string, bReq *BaseRequest) (err error) {
 		return
 	}
 
-	reader, err := callApi(baseUri, "webwxinit", bReq, bytes.NewReader(data))
+	name := "webwxinit"
+	apiUri := fmt.Sprintf("%s/%s?pass_ticket=%s&skey=%s&r=%s", baseUri, name, bReq.PassTicket, bReq.Skey, time.Now().Unix())
+	reader, err := send(apiUri, name, bytes.NewReader(data))
 	if err != nil {
 		return
 	}

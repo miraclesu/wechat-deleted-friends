@@ -3,10 +3,13 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 )
 
 func webwxGetContact(baseUri string, bReq *BaseRequest) (list []*Member, count int, err error) {
-	reader, err := callApi(baseUri, "webwxgetcontact", bReq, nil)
+	name := "webwxgetcontact"
+	apiUri := fmt.Sprintf("%s/%s?pass_ticket=%s&skey=%s&r=%s", baseUri, name, bReq.PassTicket, bReq.Skey, time.Now().Unix())
+	reader, err := send(apiUri, name, nil)
 	if err != nil {
 		return
 	}

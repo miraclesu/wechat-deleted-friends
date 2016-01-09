@@ -165,8 +165,7 @@ func findData(data, prefix, suffix string) (result string, err error) {
 	return
 }
 
-func callApi(baseUri, name string, bReq *BaseRequest, body io.Reader) (reader io.Reader, err error) {
-	apiUri := fmt.Sprintf("%s/%s?pass_ticket=%s&skey=%s&r=%s", baseUri, name, bReq.PassTicket, bReq.Skey, time.Now().Unix())
+func send(apiUri, name string, body io.Reader) (reader io.Reader, err error) {
 
 	method := "GET"
 	if body != nil {
