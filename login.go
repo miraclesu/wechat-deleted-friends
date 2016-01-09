@@ -8,10 +8,12 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"net/url"
 	"os/exec"
 	"runtime"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -62,7 +64,14 @@ func showQRImage(uuid string) (cmd *exec.Cmd, err error) {
 	params.Set("t", "webwx")
 	params.Set("_", strconv.FormatInt(time.Now().Unix(), 10))
 
-	resp, err := Client.PostForm(qrUrl, params)
+	req, err := http.NewRequest("POST", qrUrl, strings.NewReader(params.Encode()))
+	if err != nil {
+		return
+	}
+
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Cache-Control", "no-cache")
+	resp, err := Client.Do(req)
 	if err != nil {
 		return
 	}
@@ -115,10 +124,10 @@ func waitForLogin(uuid string, tip int) (redirectUri, code string, rt int, err e
 		return
 	}
 
+	rt = 0
 	switch code {
 	case "201":
 		log.Println("成功扫描,请在手机上点击确认以登录")
-		rt = 0
 	case "200":
 		redirectUri, err = findData(ds, `window.redirect_uri="`, `";`)
 		if err != nil {
@@ -126,7 +135,8 @@ func waitForLogin(uuid string, tip int) (redirectUri, code string, rt int, err e
 		}
 		redirectUri += "&fun=new"
 	case "408":
-		err = fmt.Errorf("超时")
+	case "0":
+		err = fmt.Errorf("超时，请重新运行程序")
 	default:
 		err = fmt.Errorf("未知错误，请重试")
 	}
