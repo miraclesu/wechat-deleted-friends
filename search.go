@@ -189,7 +189,7 @@ func show() {
 		return
 	}
 
-	log.Println("确定做好心理准备了吗？ y/n\n")
+	log.Println("确定做好心理准备了吗？ y/n")
 	yes := ""
 	fmt.Scanf("%s", &yes)
 	if yes != "y" {
