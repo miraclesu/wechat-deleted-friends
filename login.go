@@ -175,23 +175,12 @@ func webwxInit(baseUri string, bReq *BaseRequest) (err error) {
 		return
 	}
 
-	name := "webwxinit"
+	name, resp := "webwxinit", new(InitResp)
 	apiUri := fmt.Sprintf("%s/%s?pass_ticket=%s&skey=%s&r=%s", baseUri, name, bReq.PassTicket, bReq.Skey, time.Now().Unix())
-	reader, err := send(apiUri, name, bytes.NewReader(data))
-	if err != nil {
+	if err = send(apiUri, name, bytes.NewReader(data), resp); err != nil {
 		return
 	}
 
-	r := new(InitResp)
-	if err = json.NewDecoder(reader).Decode(r); err != nil {
-		return
-	}
-
-	if !r.IsSuccess() {
-		err = fmt.Errorf("message:[%s]", r.BaseResponse.ErrMsg)
-		return
-	}
-
-	Myself = r.User.UserName
+	Myself = resp.User.UserName
 	return
 }

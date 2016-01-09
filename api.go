@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"crypto/tls"
+	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -51,6 +52,14 @@ func init() {
 
 type Request struct {
 	BaseRequest *BaseRequest
+
+	MemberCount int    `json:",omitempty"`
+	MemberList  []User `json:",omitempty"`
+	Topic       string `json:",omitempty"`
+
+	ChatRoomName  string `json:",omitempty"`
+	DelMemberList string `json:",omitempty"`
+	AddMemberList string `json:",omitempty"`
 }
 
 type BaseRequest struct {
@@ -66,12 +75,21 @@ type BaseRequest struct {
 	DeviceID string `xml:"-"`
 }
 
+type Caller interface {
+	IsSuccess() bool
+	Error() error
+}
+
 type Response struct {
 	BaseResponse *BaseResponse
 }
 
 func (this *Response) IsSuccess() bool {
 	return this.BaseResponse.Ret == Success
+}
+
+func (this *Response) Error() error {
+	return fmt.Errorf("message:[%s]", this.BaseResponse.ErrMsg)
 }
 
 type BaseResponse struct {
@@ -88,17 +106,23 @@ type User struct {
 	UserName string
 }
 
-type ContactResp struct {
+type MemberResp struct {
 	Response
-	MemberCount int
-	MemberList  []*Member
+	MemberCount  int
+	ChatRoomName string
+	MemberList   []*Member
 }
 
 type Member struct {
-	UserName   string
-	NickName   string
-	RemarkName string
-	VerifyFlag int
+	UserName     string
+	NickName     string
+	RemarkName   string
+	VerifyFlag   int
+	MemberStatus int
+}
+
+func (this *Member) IsOnceFriend() bool {
+	return this.MemberStatus == 4
 }
 
 func (this *Member) IsNormal() bool {
@@ -165,8 +189,7 @@ func findData(data, prefix, suffix string) (result string, err error) {
 	return
 }
 
-func send(apiUri, name string, body io.Reader) (reader io.Reader, err error) {
-
+func send(apiUri, name string, body io.Reader, call Caller) (err error) {
 	method := "GET"
 	if body != nil {
 		method = "POST"
@@ -183,7 +206,7 @@ func send(apiUri, name string, body io.Reader) (reader io.Reader, err error) {
 	}
 	defer resp.Body.Close()
 
-	reader = resp.Body.(io.Reader)
+	reader := resp.Body.(io.Reader)
 	if *Debug {
 		var data []byte
 		data, err = ioutil.ReadAll(reader)
@@ -197,5 +220,12 @@ func send(apiUri, name string, body io.Reader) (reader io.Reader, err error) {
 		reader = bytes.NewReader(data)
 	}
 
+	if err = json.NewDecoder(reader).Decode(call); err != nil {
+		return
+	}
+
+	if !call.IsSuccess() {
+		return call.Error()
+	}
 	return
 }

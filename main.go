@@ -13,6 +13,8 @@ var (
 	Duration = flag.Int("d", 16, `接口调用时间间隔, 值设为 13 时亲测出现"操作太频繁"`)
 	Progress = flag.Int("p", 50, "进度条")
 	DeviceId = flag.String("did", "e000000000000000", "device id")
+
+	OnceFriends []string
 )
 
 func main() {
