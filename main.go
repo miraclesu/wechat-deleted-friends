@@ -12,8 +12,6 @@ var (
 	Progress = flag.Int("p", 50, "进度条长度")
 	Retry    = flag.Int("r", 3, "出错重试次数")
 	DeviceId = flag.String("did", "e000000000000000", "device id")
-
-	OnceFriends []string
 )
 
 func main() {
