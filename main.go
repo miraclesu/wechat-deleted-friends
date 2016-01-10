@@ -24,13 +24,19 @@ func main() {
 	flag.Parse()
 	log.Println("本程序的查询结果可能会引起一些心理上的不适，请做好心理准备...")
 
-	uuid, err := getUUID()
+	wx, err := NewWebwx()
+	if err != nil {
+		log.Printf("程序出错了: %s\n", err.Error())
+		return
+	}
+
+	uuid, err := wx.getUUID()
 	if err != nil {
 		log.Printf("获取 uuid 失败: %s\n", err.Error())
 		return
 	}
 
-	if err = showQRImage(uuid); err != nil {
+	if err = wx.showQRImage(uuid); err != nil {
 		log.Printf("创建二维码失败: %s\n", err.Error())
 		return
 	}
@@ -41,7 +47,7 @@ func main() {
 
 	redirectUri, code, tip := "", "", 1
 	for code != "200" {
-		redirectUri, code, tip, err = waitForLogin(uuid, tip)
+		redirectUri, code, tip, err = wx.waitForLogin(uuid, tip)
 		if err != nil {
 			log.Printf("描述二维码登录失败: %s\n", err.Error())
 			return

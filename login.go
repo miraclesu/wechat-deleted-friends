@@ -17,7 +17,7 @@ import (
 	"github.com/skratchdot/open-golang/open"
 )
 
-func getUUID() (uuid string, err error) {
+func (this *Webwx) getUUID() (uuid string, err error) {
 	jsloginUrl := "https://login.weixin.qq.com/jslogin"
 	params := url.Values{}
 	params.Set("appid", "wx782c26e4c19acffb")
@@ -25,7 +25,7 @@ func getUUID() (uuid string, err error) {
 	params.Set("lang", "zh_CN")
 	params.Set("_", strconv.FormatInt(time.Now().Unix(), 10))
 
-	resp, err := Client.PostForm(jsloginUrl, params)
+	resp, err := this.Client.PostForm(jsloginUrl, params)
 	if err != nil {
 		return
 	}
@@ -58,7 +58,7 @@ func getUUID() (uuid string, err error) {
 	return
 }
 
-func showQRImage(uuid string) (err error) {
+func (this *Webwx) showQRImage(uuid string) (err error) {
 	qrUrl := `https://login.weixin.qq.com/qrcode/` + uuid
 	params := url.Values{}
 	params.Set("t", "webwx")
@@ -71,7 +71,7 @@ func showQRImage(uuid string) (err error) {
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("Cache-Control", "no-cache")
-	resp, err := Client.Do(req)
+	resp, err := this.Client.Do(req)
 	if err != nil {
 		return
 	}
@@ -82,16 +82,16 @@ func showQRImage(uuid string) (err error) {
 		return
 	}
 
-	if err = createFile(QRImagePath, data, false); err != nil {
+	if err = createFile(this.QRImagePath, data, false); err != nil {
 		return
 	}
 
-	return open.Start(QRImagePath)
+	return open.Start(this.QRImagePath)
 }
 
-func waitForLogin(uuid string, tip int) (redirectUri, code string, rt int, err error) {
+func (this *Webwx) waitForLogin(uuid string, tip int) (redirectUri, code string, rt int, err error) {
 	loginUrl, rt := fmt.Sprintf("https://login.weixin.qq.com/cgi-bin/mmwebwx-bin/login?tip=%d&uuid=%s&_=%s", tip, uuid, time.Now().Unix()), tip
-	resp, err := Client.Get(loginUrl)
+	resp, err := this.Client.Get(loginUrl)
 	if err != nil {
 		return
 	}

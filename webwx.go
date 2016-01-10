@@ -38,11 +38,6 @@ var (
 )
 
 func init() {
-	transport := http.DefaultTransport.(*http.Transport)
-	transport.TLSClientConfig = &tls.Config{
-		InsecureSkipVerify: true,
-	}
-
 	var err error
 	if CurrentDir, err = os.Getwd(); err != nil {
 		log.Panicln(err.Error())
@@ -139,6 +134,52 @@ func (this *Member) IsSpecail() bool {
 		}
 	}
 	return false
+}
+
+type Webwx struct {
+	Client  *http.Client
+	Request *BaseRequest
+
+	CurrentDir  string
+	QRImagePath string
+
+	RedirectUri  string
+	BaseUri      string
+	ChatRoomName string
+	Myself       string
+	MemberList   []*Member
+
+	OnceFriends []string
+}
+
+func NewWebwx() (wx *Webwx, err error) {
+	currentDir, err := os.Getwd()
+	if err != nil {
+		return
+	}
+
+	jar, err := cookiejar.New(nil)
+	if err != nil {
+		return
+	}
+
+	transport := *(http.DefaultTransport.(*http.Transport))
+	transport.ResponseHeaderTimeout = 1 * time.Minute
+	transport.TLSClientConfig = &tls.Config{
+		InsecureSkipVerify: true,
+	}
+
+	wx = &Webwx{
+		Client: &http.Client{
+			Transport: &transport,
+			Jar:       jar,
+			Timeout:   1 * time.Minute,
+		},
+
+		CurrentDir:  currentDir,
+		QRImagePath: filepath.Join(currentDir, "qrcode.jpg"),
+	}
+	return
 }
 
 func newClient() (client *http.Client) {
