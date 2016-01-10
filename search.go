@@ -60,19 +60,18 @@ func onceFriend(members []*Member, namesMap map[string]*Member) {
 	}
 }
 
-func deleteMember(baseUri string, bReq *BaseRequest, chatRoomName string, users []string) (err error) {
-	br := Request{
-		BaseRequest:   bReq,
-		ChatRoomName:  chatRoomName,
+func (this *Webwx) deleteMember(users []string) (err error) {
+	data, err := json.Marshal(Request{
+		BaseRequest:   this.Request,
+		ChatRoomName:  this.ChatRoomName,
 		DelMemberList: strings.Join(users, ","),
-	}
-	data, err := json.Marshal(br)
+	})
 	if err != nil {
 		return
 	}
 
 	name, fun, resp := "webwxupdatechatroom", "delmember", new(MemberResp)
-	apiUri := fmt.Sprintf("%s/%s?fun=%s&pass_ticket=%s", baseUri, name, fun, bReq.PassTicket)
+	apiUri := fmt.Sprintf("%s/%s?fun=%s&pass_ticket=%s", this.BaseUri, name, fun, this.Request.PassTicket)
 	err = send(apiUri, fun, bytes.NewReader(data), resp)
 	return
 }
@@ -136,8 +135,7 @@ func (this *Webwx) Search() (err error) {
 		}
 
 		if err = try("删除群成员", func() error {
-			return deleteMember(this.BaseUri, this.Request, this.ChatRoomName, names)
-			return nil
+			return this.deleteMember(names)
 		}); err != nil {
 			return
 		}
