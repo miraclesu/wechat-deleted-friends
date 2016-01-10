@@ -9,17 +9,17 @@ import (
 	"time"
 )
 
-func webwxGetContact(baseUri string, bReq *BaseRequest) (list []*Member, count int, err error) {
+func (this *Webwx) GetContact() (err error) {
 	name, resp := "webwxgetcontact", new(MemberResp)
-	apiUri := fmt.Sprintf("%s/%s?pass_ticket=%s&skey=%s&r=%s", baseUri, name, bReq.PassTicket, bReq.Skey, time.Now().Unix())
+	apiUri := fmt.Sprintf("%s/%s?pass_ticket=%s&skey=%s&r=%s", this.BaseUri, name, this.Request.PassTicket, this.Request.Skey, time.Now().Unix())
 	if err = send(apiUri, name, nil, resp); err != nil {
 		return
 	}
 
-	list, count = make([]*Member, 0, resp.MemberCount/5*2), resp.MemberCount
-	for i := 0; i < count; i++ {
+	this.MemberList, this.Total = make([]*Member, 0, resp.MemberCount/5*2), resp.MemberCount
+	for i := 0; i < this.Total; i++ {
 		if resp.MemberList[i].IsNormal() {
-			list = append(list, resp.MemberList[i])
+			this.MemberList = append(this.MemberList, resp.MemberList[i])
 		}
 	}
 

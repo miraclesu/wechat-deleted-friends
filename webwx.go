@@ -145,9 +145,11 @@ type Webwx struct {
 
 	RedirectUri  string
 	BaseUri      string
-	ChatRoomName string
-	Myself       string
-	MemberList   []*Member
+	ChatRoomName string // 用于查找好友的群号
+	Myself       string // 自己
+
+	Total      int       // 好友总数
+	MemberList []*Member // 普通好友
 
 	OnceFriends []string
 }

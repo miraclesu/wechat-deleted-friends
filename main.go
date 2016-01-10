@@ -43,14 +43,13 @@ func main() {
 
 	Myself = wx.Myself
 	baseUri, bReq := wx.BaseUri, wx.Request
-	memberList, count, err := webwxGetContact(baseUri, bReq)
-	if err != nil {
+	if err = wx.GetContact(); err != nil {
 		log.Printf("获取联系人失败: %s\n", err.Error())
 		return
 	}
-	log.Printf("总共获取到[%d]联系人，其中普通好友[%d]人，开始查找\"好友\"\n", count, len(memberList))
+	log.Printf("总共获取到[%d]联系人，其中普通好友[%d]人，开始查找\"好友\"\n", wx.Total, len(wx.MemberList))
 
-	if err = search(baseUri, bReq, memberList); err != nil {
+	if err = search(baseUri, bReq, wx.MemberList); err != nil {
 		log.Printf("查找\"好友\"失败: %s\n", err.Error())
 		return
 	}
