@@ -77,19 +77,18 @@ func deleteMember(baseUri string, bReq *BaseRequest, chatRoomName string, users 
 	return
 }
 
-func addMember(baseUri string, bReq *BaseRequest, chatRoomName string, users []string, namesMap map[string]*Member) (err error) {
-	br := Request{
-		BaseRequest:   bReq,
-		ChatRoomName:  chatRoomName,
+func (this *Webwx) addMember(users []string, namesMap map[string]*Member) (err error) {
+	data, err := json.Marshal(Request{
+		BaseRequest:   this.Request,
+		ChatRoomName:  this.ChatRoomName,
 		AddMemberList: strings.Join(users, ","),
-	}
-	data, err := json.Marshal(br)
+	})
 	if err != nil {
 		return
 	}
 
 	name, fun, resp := "webwxupdatechatroom", "addmember", new(MemberResp)
-	apiUri := fmt.Sprintf("%s/%s?fun=%s&pass_ticket=%s", baseUri, name, fun, bReq.PassTicket)
+	apiUri := fmt.Sprintf("%s/%s?fun=%s&pass_ticket=%s", this.BaseUri, name, fun, this.Request.PassTicket)
 	if err = send(apiUri, fun, bytes.NewReader(data), resp); err != nil {
 		return
 	}
@@ -124,8 +123,7 @@ func (this *Webwx) Search() (err error) {
 
 		if len(this.ChatRoomName) > 0 {
 			err = try("增加群成员", func() error {
-				err = addMember(this.BaseUri, this.Request, this.ChatRoomName, names, namesMap)
-				return err
+				return this.addMember(names, namesMap)
 			})
 		} else {
 			err = try("创建群", func() error {
