@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 )
 
@@ -35,26 +34,15 @@ func main() {
 		return
 	}
 
-	redirectUri := wx.RedirectUri
-	bReq, err := login(redirectUri)
-	if err != nil {
+	log.Println("登录中...")
+	if err = wx.Login(); err != nil {
 		log.Printf("登录失败: %s\n", err.Error())
 		return
 	}
 	log.Println("登录成功")
 
-	index := strings.LastIndex(redirectUri, "/")
-	if index == -1 {
-		index = len(redirectUri)
-	}
-	baseUri := redirectUri[:index]
-
-	if err = webwxInit(baseUri, bReq); err != nil {
-		log.Printf("初始化失败: %s\n", err.Error())
-		return
-	}
-	log.Println("初始化成功")
-
+	Myself = wx.Myself
+	baseUri, bReq := wx.BaseUri, wx.Request
 	memberList, count, err := webwxGetContact(baseUri, bReq)
 	if err != nil {
 		log.Printf("获取联系人失败: %s\n", err.Error())

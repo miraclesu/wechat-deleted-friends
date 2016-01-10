@@ -175,6 +175,7 @@ func NewWebwx() (wx *Webwx, err error) {
 			Jar:       jar,
 			Timeout:   1 * time.Minute,
 		},
+		Request: new(BaseRequest),
 
 		CurrentDir:  currentDir,
 		QRImagePath: filepath.Join(currentDir, "qrcode.jpg"),

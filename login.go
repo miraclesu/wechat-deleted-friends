@@ -159,8 +159,8 @@ func (this *Webwx) WaitForLogin() (err error) {
 	return
 }
 
-func login(redirectUri string) (bReq *BaseRequest, err error) {
-	resp, err := Client.Get(redirectUri)
+func (this *Webwx) login() (err error) {
+	resp, err := this.Client.Get(this.RedirectUri)
 	if err != nil {
 		return
 	}
@@ -177,35 +177,56 @@ func login(redirectUri string) (bReq *BaseRequest, err error) {
 		reader = bytes.NewReader(data)
 	}
 
-	bReq = new(BaseRequest)
-	if err = xml.NewDecoder(reader).Decode(bReq); err != nil {
+	if err = xml.NewDecoder(reader).Decode(this.Request); err != nil {
 		return
 	}
 
-	if bReq.Ret != Success {
-		err = fmt.Errorf("message:[%s]", bReq.Message)
+	if this.Request.Ret != Success {
+		err = fmt.Errorf("message:[%s]", this.Request.Message)
 		return
 	}
 
-	bReq.DeviceID = *DeviceId
+	this.Request.DeviceID = *DeviceId
 	return
 }
 
-func webwxInit(baseUri string, bReq *BaseRequest) (err error) {
-	br := Request{
-		BaseRequest: bReq,
+func (this *Webwx) initBaseUri() {
+	index := strings.LastIndex(this.RedirectUri, "/")
+	if index == -1 {
+		index = len(this.RedirectUri)
 	}
-	data, err := json.Marshal(br)
+
+	this.BaseUri = this.RedirectUri[:index]
+}
+
+func (this *Webwx) webwxInit() (err error) {
+	data, err := json.Marshal(Request{
+		BaseRequest: this.Request,
+	})
 	if err != nil {
 		return
 	}
 
 	name, resp := "webwxinit", new(InitResp)
-	apiUri := fmt.Sprintf("%s/%s?pass_ticket=%s&skey=%s&r=%s", baseUri, name, bReq.PassTicket, bReq.Skey, time.Now().Unix())
+	apiUri := fmt.Sprintf("%s/%s?pass_ticket=%s&skey=%s&r=%s", this.BaseUri, name, this.Request.PassTicket, this.Request.Skey, time.Now().Unix())
 	if err = send(apiUri, name, bytes.NewReader(data), resp); err != nil {
 		return
 	}
 
-	Myself = resp.User.UserName
+	this.Myself = resp.User.UserName
+	return
+}
+
+func (this *Webwx) Login() (err error) {
+	if err = this.login(); err != nil {
+		return
+	}
+
+	if err = this.webwxInit(); err != nil {
+		err = fmt.Errorf("初始化失败: %s", err.Error())
+		return
+	}
+	log.Println("初始化成功")
+
 	return
 }
