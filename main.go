@@ -7,7 +7,7 @@ import (
 
 var (
 	Debug    = flag.Bool("debug", false, "是否为 debug 模式")
-	GroupNum = flag.Int("num", 34, "群最大人数，不要顺便设置此参数，除非群机制变了")
+	GroupNum = flag.Int("num", 34, "群最大人数，不要随便设置此参数，除非群机制变了")
 	Duration = flag.Int("d", 16, `接口调用时间间隔，单位/s, 值设为 13 时亲测出现"操作太频繁"`)
 	Progress = flag.Int("p", 50, "进度条长度")
 	Retry    = flag.Int("r", 3, "出错重试次数")
