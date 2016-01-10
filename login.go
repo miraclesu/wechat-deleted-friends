@@ -208,6 +208,7 @@ func (this *Webwx) webwxInit() (err error) {
 	}
 
 	name, resp := "webwxinit", new(InitResp)
+	this.initBaseUri()
 	apiUri := fmt.Sprintf("%s/%s?pass_ticket=%s&skey=%s&r=%s", this.BaseUri, name, this.Request.PassTicket, this.Request.Skey, time.Now().Unix())
 	if err = this.send(apiUri, name, bytes.NewReader(data), resp); err != nil {
 		return
