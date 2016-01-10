@@ -44,20 +44,8 @@ func (this *Webwx) createChatRoom(users []User, namesMap map[string]*Member) (er
 	}
 
 	this.ChatRoomName = resp.ChatRoomName
-	onceFriend(resp.MemberList, namesMap)
+	this.search(resp.MemberList, namesMap)
 	return
-}
-
-func onceFriend(members []*Member, namesMap map[string]*Member) {
-	for _, member := range members {
-		if member.IsOnceFriend() {
-			m, ok := namesMap[member.UserName]
-			if !ok {
-				m = member
-			}
-			OnceFriends = append(OnceFriends, fmt.Sprintf("昵称:[%s], 备注:[%s]", m.NickName, m.RemarkName))
-		}
-	}
 }
 
 func (this *Webwx) deleteMember(users []string) (err error) {
@@ -92,7 +80,7 @@ func (this *Webwx) addMember(users []string, namesMap map[string]*Member) (err e
 		return
 	}
 
-	onceFriend(resp.MemberList, namesMap)
+	this.search(resp.MemberList, namesMap)
 	return
 }
 
@@ -141,10 +129,10 @@ func (this *Webwx) Search() (err error) {
 		}
 
 		names, namesMap = names[:0], make(map[string]*Member, *GroupNum)
-		progress(i+1, total)
+		this.progress(i+1, total)
 	}
 
-	progress(total, total)
+	this.progress(total, total)
 	return
 }
 
@@ -168,33 +156,4 @@ func try(name string, f func() error) (err error) {
 	}
 
 	return fmt.Errorf("程序重试[%s] %d 次后出错: %s, 过段时间再尝试吧\n", name, retry-1, err.Error())
-}
-
-func progress(current, total int) {
-	done := current * *Progress / total
-	log.Printf("已完成[%d]位好友的查找，目前找到的\"好友\"人数为[%d]\n", current, len(OnceFriends))
-	log.Println("[" + strings.Repeat("#", done) + strings.Repeat("-", *Progress-done) + "]")
-}
-
-func show() {
-	count := len(OnceFriends)
-	if count == 0 {
-		log.Println("恭喜你！一个好友都没有把你删除！")
-		return
-	}
-
-	log.Println("确定做好心理准备了吗？ y/n")
-	yes := ""
-	fmt.Scanf("%s", &yes)
-	if yes != "y" {
-		log.Println("其实有些事不知道也挺好 :)")
-		return
-	}
-
-	fmt.Printf("---------- 你的\"好友\"一共有[%d]位 ----------\n", count)
-	for i := 0; i < count; i++ {
-		fmt.Println(OnceFriends[i])
-	}
-	fmt.Println("---------------------------------------------")
-	return
 }

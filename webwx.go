@@ -12,8 +12,10 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -279,4 +281,51 @@ func send(apiUri, name string, body io.Reader, call Caller) (err error) {
 		return call.Error()
 	}
 	return
+}
+
+func (this *Webwx) search(members []*Member, namesMap map[string]*Member) {
+	for _, member := range members {
+		if member.IsOnceFriend() {
+			m, ok := namesMap[member.UserName]
+			if !ok {
+				m = member
+			}
+			this.OnceFriends = append(this.OnceFriends, fmt.Sprintf("昵称:[%s], 备注:[%s]", m.NickName, m.RemarkName))
+		}
+	}
+}
+
+func (this *Webwx) progress(current, total int) {
+	done := current * *Progress / total
+	log.Printf("已完成[%d]位好友的查找，目前找到的\"好友\"人数为[%d]\n", current, len(this.OnceFriends))
+	log.Println("[" + strings.Repeat("#", done) + strings.Repeat("-", *Progress-done) + "]")
+}
+
+func (this *Webwx) Show() {
+	count := len(this.OnceFriends)
+	if count == 0 {
+		log.Println("恭喜你！一个好友都没有把你删除！")
+		return
+	}
+
+	log.Println("确定做好心理准备了吗？ y/n")
+	yes := ""
+	fmt.Scanf("%s", &yes)
+	if yes != "y" {
+		log.Println("其实有些事不知道也挺好 :)")
+		return
+	}
+
+	fmt.Printf("---------- 你的\"好友\"一共有[%d]位 ----------\n", count)
+	for i := 0; i < count; i++ {
+		fmt.Println(this.OnceFriends[i])
+	}
+	fmt.Println("---------------------------------------------")
+	return
+}
+
+func (this *Webwx) WaitForExit() os.Signal {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGTERM)
+	return <-c
 }
