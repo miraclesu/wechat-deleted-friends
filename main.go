@@ -38,7 +38,6 @@ func main() {
 	}
 	log.Println("登录成功")
 
-	Myself = wx.Myself
 	if err = wx.GetContact(); err != nil {
 		log.Printf("获取联系人失败: %s\n", err.Error())
 		return

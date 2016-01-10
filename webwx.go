@@ -24,10 +24,7 @@ const (
 )
 
 var (
-	Client      = newClient()
-	QRImagePath string
-	CurrentDir  string
-	Myself      string
+	Myself string
 
 	SpecialUsers = []string{
 		"newsapp", "fmessage", "filehelper", "weibo", "qqmail",
@@ -38,14 +35,6 @@ var (
 		"gh_22b87fa7cb3c", "officialaccounts", "notification_messages", "wxitil", "userexperience_alarm",
 	}
 )
-
-func init() {
-	var err error
-	if CurrentDir, err = os.Getwd(); err != nil {
-		log.Panicln(err.Error())
-	}
-	QRImagePath = filepath.Join(CurrentDir, "qrcode.jpg")
-}
 
 type Request struct {
 	BaseRequest *BaseRequest
@@ -148,7 +137,6 @@ type Webwx struct {
 	RedirectUri  string
 	BaseUri      string
 	ChatRoomName string // 用于查找好友的群号
-	Myself       string // 自己
 
 	Total      int       // 好友总数
 	MemberList []*Member // 普通好友
@@ -242,7 +230,7 @@ func findData(data, prefix, suffix string) (result string, err error) {
 	return
 }
 
-func send(apiUri, name string, body io.Reader, call Caller) (err error) {
+func (this *Webwx) send(apiUri, name string, body io.Reader, call Caller) (err error) {
 	method := "GET"
 	if body != nil {
 		method = "POST"
@@ -253,7 +241,7 @@ func send(apiUri, name string, body io.Reader, call Caller) (err error) {
 	}
 
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
-	resp, err := Client.Do(req)
+	resp, err := this.Client.Do(req)
 	if err != nil {
 		return
 	}
@@ -267,7 +255,7 @@ func send(apiUri, name string, body io.Reader, call Caller) (err error) {
 			return
 		}
 
-		if err = createFile(filepath.Join(CurrentDir, name+".json"), data, strings.HasSuffix(name, "member")); err != nil {
+		if err = createFile(filepath.Join(this.CurrentDir, name+".json"), data, strings.HasSuffix(name, "member")); err != nil {
 			return
 		}
 		reader = bytes.NewReader(data)

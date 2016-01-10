@@ -209,11 +209,11 @@ func (this *Webwx) webwxInit() (err error) {
 
 	name, resp := "webwxinit", new(InitResp)
 	apiUri := fmt.Sprintf("%s/%s?pass_ticket=%s&skey=%s&r=%s", this.BaseUri, name, this.Request.PassTicket, this.Request.Skey, time.Now().Unix())
-	if err = send(apiUri, name, bytes.NewReader(data), resp); err != nil {
+	if err = this.send(apiUri, name, bytes.NewReader(data), resp); err != nil {
 		return
 	}
 
-	this.Myself = resp.User.UserName
+	Myself = resp.User.UserName
 	return
 }
 

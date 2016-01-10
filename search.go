@@ -12,7 +12,7 @@ import (
 func (this *Webwx) GetContact() (err error) {
 	name, resp := "webwxgetcontact", new(MemberResp)
 	apiUri := fmt.Sprintf("%s/%s?pass_ticket=%s&skey=%s&r=%s", this.BaseUri, name, this.Request.PassTicket, this.Request.Skey, time.Now().Unix())
-	if err = send(apiUri, name, nil, resp); err != nil {
+	if err = this.send(apiUri, name, nil, resp); err != nil {
 		return
 	}
 
@@ -39,7 +39,7 @@ func (this *Webwx) createChatRoom(users []User, namesMap map[string]*Member) (er
 
 	name, resp := "webwxcreatechatroom", new(MemberResp)
 	apiUri := fmt.Sprintf("%s/%s?pass_ticket=%s&r=%s", this.BaseUri, name, this.Request.PassTicket, time.Now().Unix())
-	if err = send(apiUri, name, bytes.NewReader(data), resp); err != nil {
+	if err = this.send(apiUri, name, bytes.NewReader(data), resp); err != nil {
 		return
 	}
 
@@ -60,8 +60,7 @@ func (this *Webwx) deleteMember(users []string) (err error) {
 
 	name, fun, resp := "webwxupdatechatroom", "delmember", new(MemberResp)
 	apiUri := fmt.Sprintf("%s/%s?fun=%s&pass_ticket=%s", this.BaseUri, name, fun, this.Request.PassTicket)
-	err = send(apiUri, fun, bytes.NewReader(data), resp)
-	return
+	return this.send(apiUri, fun, bytes.NewReader(data), resp)
 }
 
 func (this *Webwx) addMember(users []string, namesMap map[string]*Member) (err error) {
@@ -76,7 +75,7 @@ func (this *Webwx) addMember(users []string, namesMap map[string]*Member) (err e
 
 	name, fun, resp := "webwxupdatechatroom", "addmember", new(MemberResp)
 	apiUri := fmt.Sprintf("%s/%s?fun=%s&pass_ticket=%s", this.BaseUri, name, fun, this.Request.PassTicket)
-	if err = send(apiUri, fun, bytes.NewReader(data), resp); err != nil {
+	if err = this.send(apiUri, fun, bytes.NewReader(data), resp); err != nil {
 		return
 	}
 
