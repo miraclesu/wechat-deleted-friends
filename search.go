@@ -26,25 +26,24 @@ func (this *Webwx) GetContact() (err error) {
 	return
 }
 
-func createChatRoom(baseUri string, bReq *BaseRequest, users []User, namesMap map[string]*Member) (chatRoomName string, err error) {
-	br := Request{
-		BaseRequest: bReq,
+func (this *Webwx) createChatRoom(users []User, namesMap map[string]*Member) (err error) {
+	data, err := json.Marshal(Request{
+		BaseRequest: this.Request,
 		MemberCount: len(users),
 		MemberList:  users,
 		Topic:       "",
-	}
-	data, err := json.Marshal(br)
+	})
 	if err != nil {
 		return
 	}
 
 	name, resp := "webwxcreatechatroom", new(MemberResp)
-	apiUri := fmt.Sprintf("%s/%s?pass_ticket=%s&r=%s", baseUri, name, bReq.PassTicket, time.Now().Unix())
+	apiUri := fmt.Sprintf("%s/%s?pass_ticket=%s&r=%s", this.BaseUri, name, this.Request.PassTicket, time.Now().Unix())
 	if err = send(apiUri, name, bytes.NewReader(data), resp); err != nil {
 		return
 	}
 
-	chatRoomName = resp.ChatRoomName
+	this.ChatRoomName = resp.ChatRoomName
 	onceFriend(resp.MemberList, namesMap)
 	return
 }
@@ -130,8 +129,7 @@ func (this *Webwx) Search() (err error) {
 			})
 		} else {
 			err = try("创建群", func() error {
-				this.ChatRoomName, err = createChatRoom(this.BaseUri, this.Request, users, namesMap)
-				return err
+				return this.createChatRoom(users, namesMap)
 			})
 		}
 
