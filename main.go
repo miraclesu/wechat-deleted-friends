@@ -42,14 +42,13 @@ func main() {
 	log.Println("登录成功")
 
 	Myself = wx.Myself
-	baseUri, bReq := wx.BaseUri, wx.Request
 	if err = wx.GetContact(); err != nil {
 		log.Printf("获取联系人失败: %s\n", err.Error())
 		return
 	}
 	log.Printf("总共获取到[%d]联系人，其中普通好友[%d]人，开始查找\"好友\"\n", wx.Total, len(wx.MemberList))
 
-	if err = search(baseUri, bReq, wx.MemberList); err != nil {
+	if err = wx.Search(); err != nil {
 		log.Printf("查找\"好友\"失败: %s\n", err.Error())
 		return
 	}

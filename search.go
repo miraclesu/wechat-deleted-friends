@@ -99,15 +99,15 @@ func addMember(baseUri string, bReq *BaseRequest, chatRoomName string, users []s
 	return
 }
 
-func search(baseUri string, bReq *BaseRequest, list []*Member) (err error) {
-	total := len(list)
+func (this *Webwx) Search() (err error) {
+	total := len(this.MemberList)
 	if total == 0 {
 		return
 	}
 
-	chatRoomName, names, users, namesMap := "", make([]string, 0, *GroupNum), make([]User, 0, *GroupNum), make(map[string]*Member, *GroupNum)
-	for i, member := range list {
-		if len(chatRoomName) == 0 {
+	names, users, namesMap := make([]string, 0, *GroupNum), make([]User, 0, *GroupNum), make(map[string]*Member, *GroupNum)
+	for i, member := range this.MemberList {
+		if len(this.ChatRoomName) == 0 {
 			users = append(users, User{
 				UserName: member.UserName,
 			})
@@ -123,14 +123,14 @@ func search(baseUri string, bReq *BaseRequest, list []*Member) (err error) {
 			time.Sleep(time.Duration(*Duration) * time.Second)
 		}
 
-		if len(chatRoomName) > 0 {
+		if len(this.ChatRoomName) > 0 {
 			err = try("增加群成员", func() error {
-				err = addMember(baseUri, bReq, chatRoomName, names, namesMap)
+				err = addMember(this.BaseUri, this.Request, this.ChatRoomName, names, namesMap)
 				return err
 			})
 		} else {
 			err = try("创建群", func() error {
-				chatRoomName, err = createChatRoom(baseUri, bReq, users, namesMap)
+				this.ChatRoomName, err = createChatRoom(this.BaseUri, this.Request, users, namesMap)
 				return err
 			})
 		}
@@ -140,7 +140,7 @@ func search(baseUri string, bReq *BaseRequest, list []*Member) (err error) {
 		}
 
 		if err = try("删除群成员", func() error {
-			return deleteMember(baseUri, bReq, chatRoomName, names)
+			return deleteMember(this.BaseUri, this.Request, this.ChatRoomName, names)
 			return nil
 		}); err != nil {
 			return
