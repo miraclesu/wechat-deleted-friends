@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -127,6 +128,32 @@ func (this *Webwx) waitForLogin(uuid string, tip int) (redirectUri, code string,
 		err = fmt.Errorf("超时，请重新运行程序")
 	default:
 		err = fmt.Errorf("未知错误，请重试")
+	}
+
+	return
+}
+
+func (this *Webwx) WaitForLogin() (err error) {
+	uuid, err := this.getUUID()
+	if err != nil {
+		err = fmt.Errorf("获取 uuid 失败: %s", err.Error())
+		return
+	}
+
+	if err = this.showQRImage(uuid); err != nil {
+		err = fmt.Errorf("创建二维码失败: %s", err.Error())
+		return
+	}
+	defer os.Remove(this.QRImagePath)
+	log.Println("请使用微信扫描二维码以登录")
+
+	code, tip := "", 1
+	for code != "200" {
+		this.RedirectUri, code, tip, err = this.waitForLogin(uuid, tip)
+		if err != nil {
+			err = fmt.Errorf("描述二维码登录失败: %s", err.Error())
+			return
+		}
 	}
 
 	return

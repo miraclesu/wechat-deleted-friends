@@ -30,30 +30,12 @@ func main() {
 		return
 	}
 
-	uuid, err := wx.getUUID()
-	if err != nil {
-		log.Printf("获取 uuid 失败: %s\n", err.Error())
+	if err = wx.WaitForLogin(); err != nil {
+		log.Println(err.Error())
 		return
 	}
 
-	if err = wx.showQRImage(uuid); err != nil {
-		log.Printf("创建二维码失败: %s\n", err.Error())
-		return
-	}
-	log.Println("请使用微信扫描二维码以登录")
-	defer func() {
-		os.Remove(QRImagePath)
-	}()
-
-	redirectUri, code, tip := "", "", 1
-	for code != "200" {
-		redirectUri, code, tip, err = wx.waitForLogin(uuid, tip)
-		if err != nil {
-			log.Printf("描述二维码登录失败: %s\n", err.Error())
-			return
-		}
-	}
-
+	redirectUri := wx.RedirectUri
 	bReq, err := login(redirectUri)
 	if err != nil {
 		log.Printf("登录失败: %s\n", err.Error())
